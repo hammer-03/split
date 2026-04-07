@@ -7,6 +7,7 @@ interface ApiError {
 
 class ApiClient {
   private token: string | null = null;
+  private cache = new Map<string, any>(); // ⚡ ADDED: Memory cache for instant speed
 
   setToken(token: string | null) {
     this.token = token;
@@ -15,6 +16,7 @@ class ApiClient {
         localStorage.setItem('token', token);
       } else {
         localStorage.removeItem('token');
+        this.cache.clear(); // Clear cache on logout
       }
     }
   }
@@ -27,19 +29,38 @@ class ApiClient {
     return this.token;
   }
 
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const token = this.getToken();
-    
-    const headers: HeadersInit = {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    };
+  private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const isGet = !options.method || options.method === 'GET';
+    const cacheKey = `${endpoint}-${JSON.stringify(options.body || '')}`;
 
+    // ⚡ INSTANT SPEED: If we already have this data recently, don't wait for the network!
+    if (isGet && this.cache.has(cacheKey)) {
+      const cachedData = this.cache.get(cacheKey);
+      // We still update the cache in the background (Revalidate)
+      this.backgroundUpdate(endpoint, options, cacheKey);
+      return cachedData;
+    }
+
+    const res = await this.performFetch<T>(endpoint, options, cacheKey);
+    return res;
+  }
+
+  private async backgroundUpdate(endpoint: string, options: RequestInit, cacheKey: string) {
+    try {
+      await this.performFetch(endpoint, options, cacheKey);
+    } catch (e) {
+      // Background fail is silent
+    }
+  }
+
+  private async performFetch<T>(endpoint: string, options: RequestInit, cacheKey: string): Promise<T> {
+    const headers = new Headers(options.headers);
+    const token = this.getToken();
     if (token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    if (options.body && !(options.body instanceof FormData)) {
+      headers.set('Content-Type', 'application/json');
     }
 
     const response = await fetch(`${API_URL}${endpoint}`, {
@@ -63,6 +84,12 @@ class ApiClient {
 
     if (!response.ok) {
       throw new Error((data as ApiError)?.error || 'Request failed');
+    }
+
+    // ⚡ SAVE TO CACHE: Store the result for next time (only for GET requests)
+    const isGet = !options.method || options.method === 'GET';
+    if (isGet) {
+      this.cache.set(cacheKey, data);
     }
 
     return data as T;
