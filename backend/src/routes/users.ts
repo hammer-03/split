@@ -203,32 +203,53 @@ router.get('/me/dashboard', async (req: AuthRequest, res: Response) => {
     .limit(10)
     .lean();
 
-    // Calculate balances on the server (much faster than mobile CPU)
+    // 1. Calculate Balances (Copied from legacy logic for 100% accuracy)
+    const balancesMap: Record<string, number> = {};
+    
+    // Process Expenses
+    expenses.forEach((expense: any) => {
+      const paidById = expense.paidBy.toString();
+      expense.splits.forEach((split: any) => {
+        const splitUserId = split.userId.toString();
+        if (paidById === userIdStr && splitUserId !== userIdStr) {
+          balancesMap[splitUserId] = (balancesMap[splitUserId] || 0) + split.amount;
+        } else if (paidById !== userIdStr && splitUserId === userIdStr) {
+          balancesMap[paidById] = (balancesMap[paidById] || 0) - split.amount;
+        }
+      });
+    });
+
+    // Process Settlements
+    const settlements = await Settlement.find({
+      $or: [{ fromUser: userIdObj }, { toUser: userIdObj }]
+    }).lean();
+
+    settlements.forEach((settlement: any) => {
+      const fromUserId = settlement.fromUser.toString();
+      const toUserId = settlement.toUser.toString();
+      if (fromUserId === userIdStr) {
+        balancesMap[toUserId] = (balancesMap[toUserId] || 0) + settlement.amount;
+      } else if (toUserId === userIdStr) {
+        balancesMap[fromUserId] = (balancesMap[fromUserId] || 0) - settlement.amount;
+      }
+    });
+
+    // Sum up totals
     let totalOwed = 0;
     let totalOwing = 0;
-
-    expenses.forEach((expense: any) => {
-      const isPayer = expense.paidBy.toString() === userIdStr;
-      const userSplit = expense.splits.find((sValue: any) => sValue.userId.toString() === userIdStr);
-
-      if (isPayer) {
-        // You paid: The total amount minus your own split is what you are owed
-        const userOwnShare = userSplit ? userSplit.amount : 0;
-        totalOwed += (expense.amount - userOwnShare);
-      } else if (userSplit) {
-        // Someone else paid: Your split is what you owe
-        totalOwing += userSplit.amount;
-      }
+    Object.values(balancesMap).forEach((val) => {
+      if (val > 0) totalOwed += val;
+      else totalOwing += Math.abs(val);
     });
 
     res.json({
       groups,
       activities,
       balances: {
-        totalOwed,
-        totalOwing,
-        netBalance: totalOwed - totalOwing,
-        balances: [] // Keeping compatible with frontend
+        totalOwed: Math.round(totalOwed * 100) / 100,
+        totalOwing: Math.round(totalOwing * 100) / 100,
+        netBalance: Math.round((totalOwed - totalOwing) * 100) / 100,
+        balances: [] 
       }
     });
   } catch (error) {
