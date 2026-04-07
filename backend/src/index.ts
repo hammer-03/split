@@ -1,0 +1,79 @@
+import express from 'express';
+import cors from 'cors';
+import mongoose from 'mongoose';
+import dotenv from 'dotenv';
+
+import {
+  authRoutes,
+  groupRoutes,
+  expenseRoutes,
+  settlementRoutes,
+  balanceRoutes,
+  activityRoutes,
+  userRoutes,
+  aiRoutes,
+  analyticsRoutes,
+} from './routes/index.js';
+
+// Load environment variables
+dotenv.config();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// Middleware
+app.use(cors({
+  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  credentials: true,
+}));
+app.use(express.json());
+
+// Health check
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// API Routes
+app.use('/api/auth', authRoutes);
+app.use('/api/groups', groupRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/settlements', settlementRoutes);
+app.use('/api/balances', balanceRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/ai', aiRoutes);
+app.use('/api/analytics', analyticsRoutes);
+
+// Error handling middleware
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Error:', err);
+  res.status(500).json({ error: 'Internal server error' });
+});
+
+// 404 handler
+app.use((_req, res) => {
+  res.status(404).json({ error: 'Not found' });
+});
+
+// Connect to MongoDB and start server
+async function start() {
+  try {
+    const mongoUri = process.env.MONGODB_URI;
+    
+    if (!mongoUri) {
+      console.error('MONGODB_URI is not defined');
+      process.exit(1);
+    }
+
+    await mongoose.connect(mongoUri);
+
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+start();
