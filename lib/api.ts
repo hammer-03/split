@@ -252,6 +252,14 @@ class ApiClient {
   }
 
   // Balances
+  async getDashboardData() {
+    return this.request<{ 
+      groups: Group[]; 
+      activities: Activity[]; 
+      balances: any 
+    }>('/users/me/dashboard');
+  }
+
   async getBalances() {
     return this.request<BalanceSummary>('/balances');
   }

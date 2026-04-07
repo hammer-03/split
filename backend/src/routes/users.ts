@@ -163,4 +163,71 @@ router.get('/me/backup', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// 🚀 TURBO ENDPOINT: Fetch everything for the dashboard in one trip
+router.get('/me/dashboard', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+    const { Activity } = await import('../models/index.js');
+
+    // Run all fetches in parallel on the server
+    const [groups, activities, expenses] = await Promise.all([
+      Group.find({ 'members.userId': userId })
+        .populate('members.userId', 'name email avatar')
+        .populate('createdBy', 'name email avatar')
+        .sort({ updatedAt: -1 })
+        .limit(10)
+        .lean(),
+      Activity.find({ 
+        $or: [
+          { userId },
+          { groupId: { $in: await Group.find({ 'members.userId': userId }).distinct('_id') } }
+        ] 
+      })
+      .populate('userId', 'name email avatar')
+      .populate('groupId', 'name')
+      .populate('expenseId', 'description amount currency')
+      .sort({ createdAt: -1 })
+      .limit(10)
+      .lean(),
+       Expense.find({
+        $or: [
+          { paidBy: userId },
+          { 'splits.userId': userId },
+        ],
+      }).lean(),
+    ]);
+
+    // Calculate balances on the server (much faster than mobile CPU)
+    let totalOwed = 0;
+    let totalOwing = 0;
+    const userBalances = new Map();
+
+    expenses.forEach((expense) => {
+      const isPayer = expense.paidBy.toString() === userId;
+      const userSplit = expense.splits.find((s: any) => s.userId.toString() === userId);
+
+      if (isPayer) {
+        const othersOwe = expense.amount - (userSplit?.amount || 0);
+        totalOwed += othersOwe;
+      } else if (userSplit) {
+        totalOwing += userSplit.amount;
+      }
+    });
+
+    res.json({
+      groups,
+      activities,
+      balances: {
+        totalOwed,
+        totalOwing,
+        netBalance: totalOwed - totalOwing,
+        balances: [] // Simplified for now
+      }
+    });
+  } catch (error) {
+    console.error('Dashboard turbo error:', error);
+    res.status(500).json({ error: 'Failed to load dashboard data' });
+  }
+});
+
 export default router;
