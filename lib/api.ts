@@ -33,10 +33,15 @@ class ApiClient {
     const isGet = !options.method || options.method === 'GET';
     const cacheKey = `${endpoint}-${JSON.stringify(options.body || '')}`;
 
+    // 🛑 DATA CONSISTENCY: If we are POSTing, UPDATING, or DELETING, wipe the cache!
+    // This ensures that when you add a transaction, the dashboard doesn't show old "0.00" data.
+    if (!isGet) {
+      this.cache.clear();
+    }
+
     // ⚡ INSTANT SPEED: If we already have this data recently, don't wait for the network!
     if (isGet && this.cache.has(cacheKey)) {
       const cachedData = this.cache.get(cacheKey);
-      // We still update the cache in the background (Revalidate)
       this.backgroundUpdate(endpoint, options, cacheKey);
       return cachedData;
     }
@@ -59,6 +64,11 @@ class ApiClient {
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     }
+    
+    // Force fresh data from the server
+    headers.set('Cache-Control', 'no-cache');
+    headers.set('Pragma', 'no-cache');
+
     if (options.body && !(options.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json');
     }
