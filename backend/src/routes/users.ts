@@ -166,50 +166,57 @@ router.get('/me/backup', async (req: AuthRequest, res: Response) => {
 // 🚀 TURBO ENDPOINT: Fetch everything for the dashboard in one trip
 router.get('/me/dashboard', async (req: AuthRequest, res: Response) => {
   try {
-    const userId = req.userId;
-    const { Activity } = await import('../models/index.js');
+    const { Activity, Group, Expense, User } = await import('../models/index.js');
+    const mongoose = (await import('mongoose')).default;
+    
+    const userIdStr = req.userId!;
+    const userIdObj = new mongoose.Types.ObjectId(userIdStr);
 
     // Run all fetches in parallel on the server
-    const [groups, activities, expenses] = await Promise.all([
-      Group.find({ 'members.userId': userId })
+    const [groups, expenses] = await Promise.all([
+      Group.find({ 'members.userId': userIdObj })
         .populate('members.userId', 'name email avatar')
         .populate('createdBy', 'name email avatar')
         .sort({ updatedAt: -1 })
         .limit(10)
         .lean(),
-      Activity.find({ 
-        $or: [
-          { userId },
-          { groupId: { $in: await Group.find({ 'members.userId': userId }).distinct('_id') } }
-        ] 
-      })
-      .populate('userId', 'name email avatar')
-      .populate('groupId', 'name')
-      .populate('expenseId', 'description amount currency')
-      .sort({ createdAt: -1 })
-      .limit(10)
-      .lean(),
        Expense.find({
         $or: [
-          { paidBy: userId },
-          { 'splits.userId': userId },
+          { paidBy: userIdObj },
+          { 'splits.userId': userIdObj },
         ],
       }).lean(),
     ]);
 
+    // Fetch activities based on the groups we found
+    const groupIds = groups.map(g => g._id);
+    const activities = await Activity.find({ 
+      $or: [
+        { userId: userIdObj },
+        { groupId: { $in: groupIds } }
+      ] 
+    })
+    .populate('userId', 'name email avatar')
+    .populate('groupId', 'name')
+    .populate('expenseId', 'description amount currency')
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean();
+
     // Calculate balances on the server (much faster than mobile CPU)
     let totalOwed = 0;
     let totalOwing = 0;
-    const userBalances = new Map();
 
-    expenses.forEach((expense) => {
-      const isPayer = expense.paidBy.toString() === userId;
-      const userSplit = expense.splits.find((s: any) => s.userId.toString() === userId);
+    expenses.forEach((expense: any) => {
+      const isPayer = expense.paidBy.toString() === userIdStr;
+      const userSplit = expense.splits.find((sValue: any) => sValue.userId.toString() === userIdStr);
 
       if (isPayer) {
-        const othersOwe = expense.amount - (userSplit?.amount || 0);
-        totalOwed += othersOwe;
+        // You paid: The total amount minus your own split is what you are owed
+        const userOwnShare = userSplit ? userSplit.amount : 0;
+        totalOwed += (expense.amount - userOwnShare);
       } else if (userSplit) {
+        // Someone else paid: Your split is what you owe
         totalOwing += userSplit.amount;
       }
     });
@@ -221,7 +228,7 @@ router.get('/me/dashboard', async (req: AuthRequest, res: Response) => {
         totalOwed,
         totalOwing,
         netBalance: totalOwed - totalOwing,
-        balances: [] // Simplified for now
+        balances: [] // Keeping compatible with frontend
       }
     });
   } catch (error) {
