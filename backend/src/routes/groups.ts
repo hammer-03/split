@@ -31,7 +31,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const groups = await Group.find({ 'members.userId': req.userId })
       .populate('members.userId', 'name email avatar')
       .populate('createdBy', 'name email avatar')
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .lean();
 
     res.json({ groups });
   } catch (error) {
@@ -140,7 +141,8 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
       'members.userId': req.userId,
     })
       .populate('members.userId', 'name email avatar')
-      .populate('createdBy', 'name email avatar');
+      .populate('createdBy', 'name email avatar')
+      .lean();
 
     if (!group) {
       res.status(404).json({ error: 'Group not found' });

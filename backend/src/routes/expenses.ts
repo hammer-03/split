@@ -64,7 +64,8 @@ router.get('/', async (req: AuthRequest, res: Response) => {
       .populate('groupId', 'name')
       .sort({ date: -1 })
       .limit(parseInt(limit as string))
-      .skip(parseInt(offset as string));
+      .skip(parseInt(offset as string))
+      .lean();
 
     const total = await Expense.countDocuments(query);
 
@@ -149,7 +150,8 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
       .populate('paidBy', 'name email avatar')
       .populate('splits.userId', 'name email avatar')
       .populate('groupId', 'name')
-      .populate('createdBy', 'name email avatar');
+      .populate('createdBy', 'name email avatar')
+      .lean();
 
     if (!expense) {
       res.status(404).json({ error: 'Expense not found' });
