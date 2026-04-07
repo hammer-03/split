@@ -72,13 +72,28 @@ async function start() {
       process.exit(1);
     }
 
-    await mongoose.connect(mongoUri);
+    // Census the URI for logging (removes password)
+    const censoredUri = mongoUri.replace(/:([^:@]+)@/, ':****@');
+    console.log(`Connecting to MongoDB: ${censoredUri}`);
+
+    await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000,
+    });
+
+    console.log('Successfully connected to MongoDB Atlas');
 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
   } catch (error) {
-    console.error('Failed to start server:', error);
+    if (error instanceof Error) {
+      console.error('Failed to start server:', error.name, error.message);
+      if (error.name === 'MongooseServerSelectionError') {
+        console.error('DIAGNOSIS: The server could not reach MongoDB Atlas. This is usually due to an IP whitelist issue (0.0.0.0/0) or a wrong password in the URI.');
+      }
+    } else {
+      console.error('Failed to start server:', error);
+    }
     process.exit(1);
   }
 }
