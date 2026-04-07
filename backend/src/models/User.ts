@@ -39,7 +39,7 @@ const userSchema = new Schema<IUser>(
     },
     currency: {
       type: String,
-      default: 'USD',
+      default: 'INR',
     },
     friends: [{
       type: Schema.Types.ObjectId,

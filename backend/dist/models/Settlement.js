@@ -57,7 +57,7 @@ const settlementSchema = new mongoose_1.Schema({
     },
     currency: {
         type: String,
-        default: 'USD',
+        default: 'INR',
     },
     note: {
         type: String,

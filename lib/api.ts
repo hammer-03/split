@@ -39,18 +39,30 @@ class ApiClient {
     };
 
     if (token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ?{token}`;
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
     }
 
-    const response = await fetch(`?{API_URL}?{endpoint}`, {
+    const response = await fetch(`${API_URL}${endpoint}`, {
       ...options,
       headers,
     });
 
-    const data = await response.json();
+    const isJson = response.headers.get('content-type')?.includes('application/json');
+    let data;
+
+    if (isJson) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      if (!response.ok) {
+        console.error(`Received non-JSON error response from ${API_URL}${endpoint}:`, text.substring(0, 200));
+        throw new Error(`API Endpoint returning invalid response (status ${response.status}). Is the backend running on the correct port?`);
+      }
+      data = text as unknown as T;
+    }
 
     if (!response.ok) {
-      throw new Error((data as ApiError).error || 'Request failed');
+      throw new Error((data as ApiError)?.error || 'Request failed');
     }
 
     return data as T;

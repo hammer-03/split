@@ -148,7 +148,7 @@ export default function AnalyticsPage() {
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          label: (context: any) => `?${Number(context.raw).toFixed(2)}`,
+          label: (context: any) => `₹${Number(context.raw).toFixed(2)}`,
         },
       },
     },
@@ -162,7 +162,7 @@ export default function AnalyticsPage() {
         grid: { color: 'rgba(255, 255, 255, 0.1)', drawBorder: false },
         ticks: {
           color: 'rgba(255, 255, 255, 0.5)',
-          callback: (value: any) => `?${value}`,
+          callback: (value: any) => `₹${value}`,
         },
         border: { display: false },
       },
@@ -201,7 +201,7 @@ export default function AnalyticsPage() {
         padding: 12,
         cornerRadius: 8,
         callbacks: {
-          label: (context: any) => ` ?${Number(context.raw).toFixed(2)}`,
+          label: (context: any) => ` ₹${Number(context.raw).toFixed(2)}`,
         },
       },
     },
@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
         cornerRadius: 8,
         displayColors: false,
         callbacks: {
-          label: (context: any) => `?${Number(context.raw).toFixed(2)}`,
+          label: (context: any) => `₹${Number(context.raw).toFixed(2)}`,
         },
       },
     },
@@ -308,7 +308,7 @@ export default function AnalyticsPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-xl md:text-3xl font-black bg-gradient-to-br from-blue-400 via-indigo-400 to-violet-500 bg-clip-text text-transparent group-hover:scale-105 transition-transform origin-left">
-                        ${data.currentMonthTotal.toFixed(2)}
+                        ₹{data.currentMonthTotal.toFixed(2)}
                       </div>
                       <p className="text-[10px] md:text-xs text-muted-foreground mt-1 font-medium italic">Current billing cycle</p>
                     </CardContent>

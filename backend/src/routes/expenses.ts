@@ -108,7 +108,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       groupId,
       description,
       amount,
-      currency: currency || 'USD',
+      currency: currency || 'INR',
       category: category || 'general',
       paidBy,
       splitType,
@@ -127,7 +127,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       groupId,
       userId: req.userId,
       expenseId: expense._id,
-      data: { description, amount, currency: currency || 'USD' },
+      data: { description, amount, currency: currency || 'INR' },
     });
 
     // Populate and return

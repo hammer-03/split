@@ -69,7 +69,7 @@ const expenseSchema = new Schema<IExpense>(
     },
     currency: {
       type: String,
-      default: 'USD',
+      default: 'INR',
     },
     category: {
       type: String,

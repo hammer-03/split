@@ -63,7 +63,7 @@ const userSchema = new mongoose_1.Schema({
     },
     currency: {
         type: String,
-        default: 'USD',
+        default: 'INR',
     },
     friends: [{
             type: mongoose_1.Schema.Types.ObjectId,

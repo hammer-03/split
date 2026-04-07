@@ -35,7 +35,7 @@ const settlementSchema = new Schema<ISettlement>(
     },
     currency: {
       type: String,
-      default: 'USD',
+      default: 'INR',
     },
     note: {
       type: String,

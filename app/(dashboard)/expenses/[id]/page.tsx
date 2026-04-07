@@ -42,8 +42,8 @@ function getInitials(name: string) {
     .slice(0, 2);
 }
 
-function formatCurrency(amount: number, currency = 'USD') {
-  return new Intl.NumberFormat('en-US', {
+function formatCurrency(amount: number, currency = 'INR') {
+  return new Intl.NumberFormat('en-IN', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

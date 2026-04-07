@@ -73,7 +73,7 @@ const expenseSchema = new mongoose_1.Schema({
     },
     currency: {
         type: String,
-        default: 'USD',
+        default: 'INR',
     },
     category: {
         type: String,

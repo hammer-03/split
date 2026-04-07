@@ -84,7 +84,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       fromUser: req.userId,
       toUser,
       amount,
-      currency: currency || 'USD',
+      currency: currency || 'INR',
       note,
       settledAt: new Date(),
     });
@@ -98,7 +98,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
       userId: req.userId,
       targetUserId: toUser,
       settlementId: settlement._id,
-      data: { amount, currency: currency || 'USD' },
+      data: { amount, currency: currency || 'INR' },
     });
 
     // Populate and return
