@@ -193,11 +193,13 @@ export default function DashboardPage() {
 
       {/* Floating Action Button for Mobile */}
       <div className="fixed bottom-8 right-6 md:hidden z-50">
-        <Button asChild size="lg" className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 shadow-2xl shadow-amber-500/40 border-none transition-all active:scale-90 hover:scale-105">
-          <Link href="/expenses/new" className="flex items-center justify-center">
-            <Plus className="h-8 w-8 text-black" />
-          </Link>
-        </Button>
+        <motion.div whileTap={{ scale: 0.9 }} whileHover={{ scale: 1.1 }}>
+          <Button asChild size="lg" className="h-16 w-16 rounded-full bg-gradient-to-br from-amber-400 to-rose-500 shadow-2xl shadow-amber-500/40 border-none transition-all active:scale-90 hover:scale-105">
+            <Link href="/expenses/new" className="flex items-center justify-center">
+              <Plus className="h-8 w-8 text-black" />
+            </Link>
+          </Button>
+        </motion.div>
       </div>
     </div>
   );

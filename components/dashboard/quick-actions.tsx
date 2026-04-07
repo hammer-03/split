@@ -23,62 +23,68 @@ export function QuickActions({ onAddExpense, onCreateGroup, onSettleUp }: QuickA
         <CardDescription className="uppercase text-[10px] tracking-widest font-black opacity-40">System Quick-Links</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">
-        <Button
-          variant="outline"
-          className="justify-start gap-4 h-14 rounded-2xl border-white/5 bg-white/5 hover:bg-primary hover:text-black hover:border-primary transition-all group/btn relative overflow-hidden"
-          onClick={onAddExpense}
-          asChild={!onAddExpense}
-        >
-          {onAddExpense ? (
-            <>
-              <Plus className="h-5 w-5 transition-transform group-hover/btn:rotate-90 group-hover/btn:scale-125" />
-              <span className="font-black text-xs uppercase tracking-widest">Post Expense</span>
-            </>
-          ) : (
-            <Link href="/expenses/new">
-              <Plus className="h-5 w-5 transition-transform group-hover/btn:rotate-90 group-hover/btn:scale-125" />
-              <span className="font-black text-xs uppercase tracking-widest">Post Expense</span>
-            </Link>
-          )}
-        </Button>
+        <motion.div whileTap={{ scale: 0.96 }} whileHover={{ y: -2 }} className="w-full">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-4 h-14 rounded-2xl border-white/5 bg-white/5 hover:bg-primary hover:text-black hover:border-primary transition-all group/btn relative overflow-hidden"
+            onClick={onAddExpense}
+            asChild={!onAddExpense}
+          >
+            {onAddExpense ? (
+              <>
+                <Plus className="h-5 w-5 transition-transform group-hover/btn:rotate-90 group-hover/btn:scale-125" />
+                <span className="font-black text-xs uppercase tracking-widest">Post Expense</span>
+              </>
+            ) : (
+              <Link href="/expenses/new">
+                <Plus className="h-5 w-5 transition-transform group-hover/btn:rotate-90 group-hover/btn:scale-125" />
+                <span className="font-black text-xs uppercase tracking-widest">Post Expense</span>
+              </Link>
+            )}
+          </Button>
+        </motion.div>
 
-        <Button
-          variant="outline"
-          className="justify-start gap-4 h-14 rounded-2xl border-white/5 bg-white/5 hover:bg-violet-500 hover:text-black hover:border-violet-500 transition-all group/btn"
-          onClick={onCreateGroup}
-          asChild={!onCreateGroup}
-        >
-          {onCreateGroup ? (
-            <>
-              <Users className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-              <span className="font-black text-xs uppercase tracking-widest">Forge Squad</span>
-            </>
-          ) : (
-            <Link href="/groups/new">
-              <Users className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-              <span className="font-black text-xs uppercase tracking-widest">Forge Squad</span>
-            </Link>
-          )}
-        </Button>
+        <motion.div whileTap={{ scale: 0.96 }} whileHover={{ y: -2 }} className="w-full">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-4 h-14 rounded-2xl border-white/5 bg-white/5 hover:bg-violet-500 hover:text-black hover:border-violet-500 transition-all group/btn"
+            onClick={onCreateGroup}
+            asChild={!onCreateGroup}
+          >
+            {onCreateGroup ? (
+              <>
+                <Users className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
+                <span className="font-black text-xs uppercase tracking-widest">Forge Squad</span>
+              </>
+            ) : (
+              <Link href="/groups/new">
+                <Users className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
+                <span className="font-black text-xs uppercase tracking-widest">Forge Squad</span>
+              </Link>
+            )}
+          </Button>
+        </motion.div>
 
-        <Button
-          variant="outline"
-          className="justify-start gap-4 h-14 rounded-2xl border-white/5 bg-white/5 hover:bg-emerald-500 hover:text-black hover:border-emerald-500 transition-all group/btn"
-          onClick={onSettleUp}
-          asChild={!onSettleUp}
-        >
-          {onSettleUp ? (
-            <>
-              <Wallet className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-              <span className="font-black text-xs uppercase tracking-widest">Sync Debts</span>
-            </>
-          ) : (
-            <Link href="/settlements/new">
-              <Wallet className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
-              <span className="font-black text-xs uppercase tracking-widest">Sync Debts</span>
-            </Link>
-          )}
-        </Button>
+        <motion.div whileTap={{ scale: 0.96 }} whileHover={{ y: -2 }} className="w-full">
+          <Button
+            variant="outline"
+            className="w-full justify-start gap-4 h-14 rounded-2xl border-white/5 bg-white/5 hover:bg-emerald-500 hover:text-black hover:border-emerald-500 transition-all group/btn"
+            onClick={onSettleUp}
+            asChild={!onSettleUp}
+          >
+            {onSettleUp ? (
+              <>
+                <Wallet className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
+                <span className="font-black text-xs uppercase tracking-widest">Sync Debts</span>
+              </>
+            ) : (
+              <Link href="/settlements/new">
+                <Wallet className="h-5 w-5 group-hover/btn:scale-110 transition-transform" />
+                <span className="font-black text-xs uppercase tracking-widest">Sync Debts</span>
+              </Link>
+            )}
+          </Button>
+        </motion.div>
 
         <div className="pt-2">
             <Button

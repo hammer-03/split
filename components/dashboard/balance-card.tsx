@@ -3,6 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { motion, useSpring, useTransform } from 'framer-motion';
+import { useEffect } from 'react';
 
 interface BalanceCardProps {
   totalOwed: number;
@@ -10,16 +12,26 @@ interface BalanceCardProps {
   currency?: string;
 }
 
-export function BalanceCard({ totalOwed, totalOwing, currency = 'INR' }: BalanceCardProps) {
-  const netBalance = totalOwed - totalOwing;
-  
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-IN', {
+// 🎰 THE COUNTER: Fast-incrementing numbers animation
+function AnimatedCounter({ value, currency = 'INR' }: { value: number; currency?: string }) {
+  const spring = useSpring(0, { mass: 1, stiffness: 45, damping: 15 });
+  const display = useTransform(spring, (current) => 
+    new Intl.NumberFormat('en-IN', {
       style: 'currency',
       currency,
       minimumFractionDigits: 2,
-    }).format(Math.abs(amount));
-  };
+    }).format(Math.abs(current))
+  );
+
+  useEffect(() => {
+    spring.set(value);
+  }, [value, spring]);
+
+  return <motion.span>{display}</motion.span>;
+}
+
+export function BalanceCard({ totalOwed, totalOwing, currency = 'INR' }: BalanceCardProps) {
+  const netBalance = totalOwed - totalOwing;
 
   return (
     <div className="grid gap-6 md:grid-cols-3">
@@ -37,7 +49,7 @@ export function BalanceCard({ totalOwed, totalOwing, currency = 'INR' }: Balance
         </CardHeader>
         <CardContent className="relative z-10">
           <div className="text-4xl font-black text-white tracking-tighter">
-            {netBalance >= 0 ? '+' : '-'}{formatCurrency(netBalance)}
+            {netBalance >= 0 ? '+' : '-'}<AnimatedCounter value={netBalance} currency={currency} />
           </div>
           <p className="text-[10px] font-bold text-white/50 uppercase mt-2 tracking-widest">
             {netBalance > 0 
@@ -60,7 +72,7 @@ export function BalanceCard({ totalOwed, totalOwing, currency = 'INR' }: Balance
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-black text-success tracking-tighter">
-            {formatCurrency(totalOwed)}
+            <AnimatedCounter value={totalOwed} currency={currency} />
           </div>
           <div className="h-1 w-12 bg-success/20 rounded-full mt-3" />
         </CardContent>
@@ -77,7 +89,7 @@ export function BalanceCard({ totalOwed, totalOwing, currency = 'INR' }: Balance
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-black text-warning tracking-tighter">
-            {formatCurrency(totalOwing)}
+            <AnimatedCounter value={totalOwing} currency={currency} />
           </div>
           <div className="h-1 w-12 bg-warning/20 rounded-full mt-3" />
         </CardContent>
