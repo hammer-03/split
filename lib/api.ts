@@ -87,6 +87,13 @@ class ApiClient {
     return this.request<{ user: User }>('/auth/me');
   }
 
+  async googleLogin(idToken: string) {
+    return this.request<{ user: User; token: string }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ idToken }),
+    });
+  }
+
   async updateProfile(data: { name?: string; avatar?: string; currency?: string; email?: string }) {
     return this.request<{ user: User }>('/auth/profile', {
       method: 'PATCH',

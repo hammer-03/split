@@ -9,14 +9,30 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { GoogleLogin } from '@react-oauth/google';
 import { Loader2, Receipt } from 'lucide-react';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, googleLogin } = useAuth();
   const router = useRouter();
+
+  const handleGoogleSuccess = async (response: any) => {
+    setIsLoading(true);
+    try {
+      if (response.credential) {
+        await googleLogin(response.credential);
+        toast.success('Welcome back!');
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      toast.error('Google sign-in failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +113,28 @@ export default function LoginPage() {
                 )}
               </Button>
             </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <span className="w-full border-t" />
+              </div>
+              <div className="relative flex justify-center text-xs uppercase">
+                <span className="bg-background px-2 text-muted-foreground whitespace-nowrap">
+                  Or continue with
+                </span>
+              </div>
+            </div>
+
+            <div className="flex justify-center w-full">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={() => toast.error('Google login failed')}
+                useOneTap
+                theme="filled_black"
+                shape="pill"
+                width="100%"
+              />
+            </div>
 
             <div className="mt-6 text-center text-sm">
               <span className="text-muted-foreground">{"Don't have an account?"} </span>

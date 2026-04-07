@@ -1,7 +1,10 @@
 import { Router, Response } from 'express';
 import { z } from 'zod';
+import { OAuth2Client } from 'google-auth-library';
 import { User } from '../models/index.js';
 import { generateToken, auth, AuthRequest } from '../middleware/auth.js';
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const router = Router();
 
@@ -102,6 +105,56 @@ router.post('/login', async (req, res: Response) => {
   } catch (error) {
     console.error('Login error:', error);
     res.status(500).json({ error: 'Failed to login' });
+  }
+});
+
+// Google Login
+router.post('/google', async (req, res: Response) => {
+  try {
+    const { idToken } = req.body;
+    if (!idToken) {
+      res.status(400).json({ error: 'ID Token is required' });
+      return;
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      res.status(400).json({ error: 'Invalid ID Token' });
+      return;
+    }
+
+    const { email, name, picture } = payload;
+    
+    // Find or create user
+    let user = await User.findOne({ email: email.toLowerCase() });
+    
+    if (!user) {
+      // Create new user for google signup
+      user = new User({
+        email: email.toLowerCase(),
+        name: name || 'Google User',
+        avatar: picture || '',
+        password: Math.random().toString(36).slice(-10), // Random placeholder password
+      });
+      await user.save();
+    }
+
+    // Generate token
+    const token = generateToken(user._id.toString());
+
+    res.json({
+      message: 'Google login successful',
+      user: user.toJSON(),
+      token,
+    });
+  } catch (error) {
+    console.error('Google login error:', error);
+    res.status(500).json({ error: 'Failed to login with Google' });
   }
 });
 
