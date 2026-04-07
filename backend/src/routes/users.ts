@@ -166,7 +166,7 @@ router.get('/me/backup', async (req: AuthRequest, res: Response) => {
 // 🚀 TURBO ENDPOINT: Fetch everything for the dashboard in one trip
 router.get('/me/dashboard', async (req: AuthRequest, res: Response) => {
   try {
-    const { Activity, Group, Expense, User } = await import('../models/index.js');
+    const { Activity, Group, Expense, User, Settlement } = await import('../models/index.js');
     const mongoose = (await import('mongoose')).default;
     
     const userIdStr = req.userId!;
