@@ -77,7 +77,7 @@ export default function SettingsPage() {
   const handleSaveProfile = async () => {
     setIsSaving(true)
     try {
-      await api.users.updateProfile({ name, email })
+      await api.updateProfile({ name, email })
       setSaveSuccess(true)
       setTimeout(() => setSaveSuccess(false), 3000)
     } catch (err) {
@@ -90,7 +90,7 @@ export default function SettingsPage() {
   const handleSaveNotifications = async () => {
     setIsSaving(true)
     try {
-      await api.users.updateSettings({
+      await api.updateSettings({
         emailNotifications,
         pushNotifications,
         expenseReminders,
@@ -109,7 +109,7 @@ export default function SettingsPage() {
   const handleSavePreferences = async () => {
     setIsSaving(true)
     try {
-      await api.users.updateSettings({
+      await api.updateSettings({
         currency,
         theme,
         language,
@@ -126,12 +126,29 @@ export default function SettingsPage() {
 
   const handleDeleteAccount = async () => {
     try {
-      await api.users.deleteAccount()
+      await api.deleteAccount()
       logout()
     } catch (err) {
       console.error("Failed to delete account:", err)
     }
   }
+
+  const handleDownloadBackup = async () => {
+    try {
+      const data = await api.getBackup();
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `splitease-backup-${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("Failed to download backup:", err);
+    }
+  };
 
   const getInitials = (name: string) => {
     return name
@@ -145,8 +162,7 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col gap-6">
       <DashboardHeader
-        title="Settings"
-        description="Manage your account and preferences"
+        breadcrumbs={[{ label: 'Settings' }]}
       />
 
       <Tabs defaultValue="profile" className="w-full">
@@ -454,6 +470,28 @@ export default function SettingsPage() {
                 </Field>
 
                 <Button>Update Password</Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Data & Privacy</CardTitle>
+                <CardDescription>
+                  Download a copy of your personal data or manage your account visibility
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between rounded-lg border p-4">
+                  <div>
+                    <p className="font-medium">Download Data</p>
+                    <p className="text-sm text-muted-foreground">
+                      Get a copy of all your groups, expenses, and settlements in JSON format
+                    </p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={handleDownloadBackup}>
+                    Download JSON
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

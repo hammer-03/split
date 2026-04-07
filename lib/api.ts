@@ -87,10 +87,27 @@ class ApiClient {
     return this.request<{ user: User }>('/auth/me');
   }
 
-  async updateProfile(data: { name?: string; avatar?: string; currency?: string }) {
+  async updateProfile(data: { name?: string; avatar?: string; currency?: string; email?: string }) {
     return this.request<{ user: User }>('/auth/profile', {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  }
+
+  async getBackup() {
+    return this.request<any>('/users/me/backup');
+  }
+
+  async updateSettings(data: any) {
+    return this.request<{ user: User }>('/users/profile', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteAccount() {
+    return this.request<{ message: string }>('/users/profile', {
+      method: 'DELETE',
     });
   }
 

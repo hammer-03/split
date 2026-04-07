@@ -82,6 +82,13 @@ async function start() {
 
     console.log('Successfully connected to MongoDB Atlas');
 
+    // Keep-alive heartbeat for Atlas M0 Free Tier (prevents idle timeouts)
+    setInterval(() => {
+      if (mongoose.connection.readyState === 1) {
+        mongoose.connection.db?.admin().ping().catch(err => console.error('Heartbeat failed:', err));
+      }
+    }, 120000); // Every 2 minutes
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

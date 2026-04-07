@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { User } from '../models/index.js';
+import { User, Group, Expense, Settlement } from '../models/index.js';
 import { auth, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();
@@ -121,6 +121,45 @@ router.get('/me/friends', async (req: AuthRequest, res: Response) => {
   } catch (error) {
     console.error('Get friends error:', error);
     res.status(500).json({ error: 'Failed to fetch friends' });
+  }
+});
+
+// Data Backup Export (compiles all user data)
+router.get('/me/backup', async (req: AuthRequest, res: Response) => {
+  try {
+    const userId = req.userId;
+
+    const [groups, expenses, settlements] = await Promise.all([
+      Group.find({ 'members.userId': userId }).select('name description category members createdBy createdAt'),
+      Expense.find({
+        $or: [
+          { paidBy: userId },
+          { 'splits.userId': userId },
+        ],
+      }).select('description amount currency category paidBy date splits createdBy'),
+      Settlement.find({
+        $or: [
+          { fromUser: userId },
+          { toUser: userId },
+        ],
+      }).select('amount currency note fromUser toUser settledAt'),
+    ]);
+
+    res.json({
+      exportedAt: new Date().toISOString(),
+      user: {
+        name: req.user?.name,
+        email: req.user?.email,
+      },
+      data: {
+        groups,
+        expenses,
+        settlements,
+      }
+    });
+  } catch (error) {
+    console.error('Backup error:', error);
+    res.status(500).json({ error: 'Failed to generate backup' });
   }
 });
 
