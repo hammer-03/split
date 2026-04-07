@@ -77,8 +77,8 @@ router.post('/login', async (req, res: Response) => {
 
     const { email, password } = validation.data;
 
-    // Find user
-    const user = await User.findOne({ email: email.toLowerCase() });
+    // Find user by email (explicitly select password for comparison)
+    const user = await User.findOne({ email: email.toLowerCase() }).select('+password');
     if (!user) {
       res.status(401).json({ error: 'Invalid email or password' });
       return;
@@ -108,7 +108,12 @@ router.post('/login', async (req, res: Response) => {
 // Get current user
 router.get('/me', auth, async (req: AuthRequest, res: Response) => {
   try {
-    res.json({ user: req.user?.toJSON() });
+    const user = await User.findById(req.userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    res.json({ user: user.toJSON() });
   } catch (error) {
     console.error('Get user error:', error);
     res.status(500).json({ error: 'Failed to get user' });

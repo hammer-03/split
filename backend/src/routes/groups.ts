@@ -90,6 +90,22 @@ router.post('/', async (req: AuthRequest, res: Response) => {
     await group.populate('members.userId', 'name email avatar');
     await group.populate('createdBy', 'name email avatar');
 
+    // AUTO-FRIEND: Add all recognized members as friends of the creator and vice-versa
+    if (memberUserIds.length > 0) {
+      await Promise.all([
+        // Add them to my friends list
+        User.findByIdAndUpdate(req.userId, { 
+          $addToSet: { friends: { $each: memberUserIds } } 
+        }),
+        // Add me to each of their friends lists
+        ...memberUserIds.map(mid => 
+          User.findByIdAndUpdate(mid, { 
+            $addToSet: { friends: req.userId } 
+          })
+        )
+      ]);
+    }
+
     res.status(201).json({ group });
   } catch (error) {
     console.error('Create group error:', error);
@@ -100,8 +116,15 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // Get group by ID
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const id = String(req.params.id);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: 'Invalid group ID format' });
+      return;
+    }
+
     const group = await Group.findOne({
-      _id: req.params.id,
+      _id: id,
       'members.userId': req.userId,
     })
       .populate('members.userId', 'name email avatar')
@@ -114,6 +137,10 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 
     res.json({ group });
   } catch (error) {
+    if (error instanceof mongoose.Error.CastError) {
+      res.status(400).json({ error: 'Invalid group ID format' });
+      return;
+    }
     console.error('Get group error:', error);
     res.status(500).json({ error: 'Failed to fetch group' });
   }
@@ -122,6 +149,13 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // Update group
 router.patch('/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const id = String(req.params.id);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: 'Invalid group ID format' });
+      return;
+    }
+
     const validation = updateGroupSchema.safeParse(req.body);
     
     if (!validation.success) {
@@ -176,6 +210,13 @@ router.patch('/:id', async (req: AuthRequest, res: Response) => {
 // Add member to group
 router.post('/:id/members', async (req: AuthRequest, res: Response) => {
   try {
+    const id = String(req.params.id);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: 'Invalid group ID format' });
+      return;
+    }
+
     const { email } = req.body;
 
     if (!email) {
@@ -227,6 +268,13 @@ router.post('/:id/members', async (req: AuthRequest, res: Response) => {
     });
 
     await group.populate('members.userId', 'name email avatar');
+
+    // AUTO-FRIEND: Add the new member as a friend of the person who added them and vice-versa
+    await Promise.all([
+      User.findByIdAndUpdate(req.userId, { $addToSet: { friends: userToAdd._id } }),
+      User.findByIdAndUpdate(userToAdd._id, { $addToSet: { friends: req.userId } })
+    ]);
+
     res.json({ group });
   } catch (error) {
     console.error('Add member error:', error);
@@ -237,8 +285,16 @@ router.post('/:id/members', async (req: AuthRequest, res: Response) => {
 // Remove member from group
 router.delete('/:id/members/:userId', async (req: AuthRequest, res: Response) => {
   try {
+    const groupId = String(req.params.id);
+    const userIdToRemove = String(req.params.userId);
+
+    if (!mongoose.Types.ObjectId.isValid(groupId) || !mongoose.Types.ObjectId.isValid(userIdToRemove)) {
+      res.status(400).json({ error: 'Invalid ID format' });
+      return;
+    }
+
     const group = await Group.findOne({
-      _id: req.params.id,
+      _id: groupId,
       'members.userId': req.userId,
     });
 
@@ -287,8 +343,15 @@ router.delete('/:id/members/:userId', async (req: AuthRequest, res: Response) =>
 // Delete group
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
+    const id = String(req.params.id);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      res.status(400).json({ error: 'Invalid group ID format' });
+      return;
+    }
+
     const group = await Group.findOne({
-      _id: req.params.id,
+      _id: id,
       'members.userId': req.userId,
     });
 

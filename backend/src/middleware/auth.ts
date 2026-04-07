@@ -29,14 +29,8 @@ export const auth = async (req: AuthRequest, res: Response, next: NextFunction):
     }
 
     const decoded = jwt.verify(token, secret) as JwtPayload;
-    const user = await User.findById(decoded.userId);
 
-    if (!user) {
-      res.status(401).json({ error: 'User not found' });
-      return;
-    }
-
-    req.user = user;
+    // Attach userId from token only (saves a slow database round-trip!)
     req.userId = decoded.userId;
     next();
   } catch (error) {

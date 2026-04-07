@@ -96,19 +96,38 @@ export default function GroupDetailPage({ params }: { params: Promise<{ id: stri
 
   useEffect(() => {
     const fetchData = async () => {
+      setIsLoading(true);
       try {
-        const [groupData, expensesData, balancesData] = await Promise.all([
-          api.getGroup(id),
+        // Fetch group info first (critical)
+        try {
+          const groupData = await api.getGroup(id);
+          setGroup(groupData.group);
+        } catch (error) {
+          console.error('Failed to fetch group info:', error);
+          toast.error('Group not found or access denied');
+          router.push('/groups');
+          return;
+        }
+
+        // Fetch non-critical data in parallel
+        const [expensesRes, balancesRes] = await Promise.allSettled([
           api.getExpenses({ groupId: id, limit: 10 }),
           api.getGroupBalances(id),
         ]);
-        setGroup(groupData.group);
-        setExpenses(expensesData.expenses);
-        setBalances(balancesData);
-      } catch (error) {
-        console.error('Failed to fetch group data:', error);
-        toast.error('Failed to load group');
-        router.push('/groups');
+
+        if (expensesRes.status === 'fulfilled') {
+          setExpenses(expensesRes.value.expenses);
+        } else {
+          console.error('Failed to fetch expenses:', expensesRes.reason);
+          toast.error('Failed to load recent expenses');
+        }
+
+        if (balancesRes.status === 'fulfilled') {
+          setBalances(balancesRes.value);
+        } else {
+          console.error('Failed to fetch balances:', balancesRes.reason);
+          // Don't show toast for balances to avoid clutter, just log it
+        }
       } finally {
         setIsLoading(false);
       }

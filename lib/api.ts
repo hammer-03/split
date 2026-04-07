@@ -107,31 +107,31 @@ class ApiClient {
   }
 
   async getGroup(id: string) {
-    return this.request<{ group: Group }>(`/groups/?{id}`);
+    return this.request<{ group: Group }>(`/groups/${id}`);
   }
 
   async updateGroup(id: string, data: Partial<Group>) {
-    return this.request<{ group: Group }>(`/groups/?{id}`, {
+    return this.request<{ group: Group }>(`/groups/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
   async deleteGroup(id: string) {
-    return this.request<{ message: string }>(`/groups/?{id}`, {
+    return this.request<{ message: string }>(`/groups/${id}`, {
       method: 'DELETE',
     });
   }
 
   async addGroupMember(groupId: string, email: string) {
-    return this.request<{ group: Group }>(`/groups/?{groupId}/members`, {
+    return this.request<{ group: Group }>(`/groups/${groupId}/members`, {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   }
 
   async removeGroupMember(groupId: string, userId: string) {
-    return this.request<{ group: Group }>(`/groups/?{groupId}/members/?{userId}`, {
+    return this.request<{ group: Group }>(`/groups/${groupId}/members/${userId}`, {
       method: 'DELETE',
     });
   }
@@ -147,7 +147,7 @@ class ApiClient {
     if (params?.offset) searchParams.set('offset', params.offset.toString());
     
     const query = searchParams.toString();
-    return this.request<{ expenses: Expense[]; total: number }>(`/expenses?{query ? `??{query}` : ''}`);
+    return this.request<{ expenses: Expense[]; total: number }>(`/expenses${query ? `?${query}` : ''}`);
   }
 
   async createExpense(data: CreateExpenseData) {
@@ -158,18 +158,18 @@ class ApiClient {
   }
 
   async getExpense(id: string) {
-    return this.request<{ expense: Expense }>(`/expenses/?{id}`);
+    return this.request<{ expense: Expense }>(`/expenses/${id}`);
   }
 
   async updateExpense(id: string, data: Partial<CreateExpenseData>) {
-    return this.request<{ expense: Expense }>(`/expenses/?{id}`, {
+    return this.request<{ expense: Expense }>(`/expenses/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
   }
 
   async deleteExpense(id: string) {
-    return this.request<{ message: string }>(`/expenses/?{id}`, {
+    return this.request<{ message: string }>(`/expenses/${id}`, {
       method: 'DELETE',
     });
   }
@@ -190,7 +190,7 @@ class ApiClient {
     if (params?.offset) searchParams.set('offset', params.offset.toString());
     
     const query = searchParams.toString();
-    return this.request<{ settlements: Settlement[]; total: number }>(`/settlements?{query ? `??{query}` : ''}`);
+    return this.request<{ settlements: Settlement[]; total: number }>(`/settlements${query ? `?${query}` : ''}`);
   }
 
   async createSettlement(data: { groupId?: string; toUser: string; amount: number; currency?: string; note?: string }) {
@@ -206,15 +206,15 @@ class ApiClient {
   }
 
   async getGroupBalances(groupId: string) {
-    return this.request<GroupBalanceSummary>(`/balances/group/?{groupId}`);
+    return this.request<GroupBalanceSummary>(`/balances/group/${groupId}`);
   }
 
   async getUserBalance(userId: string) {
-    return this.request<UserBalance>(`/balances/user/?{userId}`);
+    return this.request<UserBalance>(`/balances/user/${userId}`);
   }
 
   async simplifyDebts(groupId: string) {
-    return this.request<{ suggestedTransactions: SuggestedTransaction[] }>(`/balances/simplify/?{groupId}`);
+    return this.request<{ suggestedTransactions: SuggestedTransaction[] }>(`/balances/simplify/${groupId}`);
   }
 
   // Analytics
@@ -229,7 +229,7 @@ class ApiClient {
     if (params?.offset) searchParams.set('offset', params.offset.toString());
     
     const query = searchParams.toString();
-    return this.request<{ activities: Activity[]; total: number }>(`/activity?{query ? `??{query}` : ''}`);
+    return this.request<{ activities: Activity[]; total: number }>(`/activity${query ? `?${query}` : ''}`);
   }
 
   async getGroupActivity(groupId: string, params?: { limit?: number; offset?: number }) {
@@ -238,16 +238,16 @@ class ApiClient {
     if (params?.offset) searchParams.set('offset', params.offset.toString());
     
     const query = searchParams.toString();
-    return this.request<{ activities: Activity[]; total: number }>(`/activity/group/?{groupId}?{query ? `??{query}` : ''}`);
+    return this.request<{ activities: Activity[]; total: number }>(`/activity/group/${groupId}${query ? `?${query}` : ''}`);
   }
 
   // Users
   async searchUsers(query: string) {
-    return this.request<{ users: User[] }>(`/users/search?q=?{encodeURIComponent(query)}`);
+    return this.request<{ users: User[] }>(`/users/search?q=${encodeURIComponent(query)}`);
   }
 
   async getUser(id: string) {
-    return this.request<{ user: User }>(`/users/?{id}`);
+    return this.request<{ user: User }>(`/users/${id}`);
   }
 
   async getFriends() {
@@ -255,13 +255,13 @@ class ApiClient {
   }
 
   async addFriend(userId: string) {
-    return this.request<{ message: string }>(`/users/friends/?{userId}`, {
+    return this.request<{ message: string }>(`/users/friends/${userId}`, {
       method: 'POST',
     });
   }
 
   async removeFriend(userId: string) {
-    return this.request<{ message: string }>(`/users/friends/?{userId}`, {
+    return this.request<{ message: string }>(`/users/friends/${userId}`, {
       method: 'DELETE',
     });
   }
