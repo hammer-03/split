@@ -26,11 +26,15 @@ export default function DashboardPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const dashboardData = await api.getDashboardData();
+        const [balanceData, activityData, groupData] = await Promise.all([
+          api.getBalances(),
+          api.getActivity({ limit: 10 }),
+          api.getGroups(),
+        ]);
         
-        setBalances(dashboardData.balances);
-        setActivities(dashboardData.activities);
-        setGroups(dashboardData.groups);
+        setBalances(balanceData);
+        setActivities(activityData.activities);
+        setGroups(groupData.groups);
       } catch (error) {
         console.error('Failed to fetch dashboard data:', error);
       } finally {
