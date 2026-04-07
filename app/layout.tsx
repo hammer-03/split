@@ -2,9 +2,12 @@ import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from 'next-themes'
+import { GoogleOAuthProvider } from '@react-oauth/google'
 import { Toaster } from '@/components/ui/sonner'
 import { AuthProvider } from '@/lib/auth-context'
 import './globals.css'
+
+const GOOGLE_CLIENT_ID = '966803279485-j1js0g6kfafpl1ihndpn8lhgufr1cb92.apps.googleusercontent.com'
 
 const geistSans = Geist({ 
   subsets: ["latin"],
