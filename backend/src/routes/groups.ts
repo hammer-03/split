@@ -92,18 +92,30 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
     // AUTO-FRIEND: Add all recognized members as friends of the creator and vice-versa
     if (memberUserIds.length > 0) {
-      await Promise.all([
-        // Add them to my friends list
-        User.findByIdAndUpdate(req.userId, { 
-          $addToSet: { friends: { $each: memberUserIds } } 
-        }),
-        // Add me to each of their friends lists
-        ...memberUserIds.map(mid => 
-          User.findByIdAndUpdate(mid, { 
-            $addToSet: { friends: req.userId } 
+      try {
+        const friendUpdates = [];
+        
+        // 1. Add them to my friends list
+        friendUpdates.push(
+          User.findByIdAndUpdate(req.userId, { 
+            $addToSet: { friends: { $each: memberUserIds } } 
           })
-        )
-      ]);
+        );
+        
+        // 2. Add me to each of their friends lists
+        memberUserIds.forEach(mid => {
+          friendUpdates.push(
+            User.findByIdAndUpdate(mid, { 
+              $addToSet: { friends: req.userId } 
+            })
+          );
+        });
+
+        await Promise.all(friendUpdates);
+      } catch (friendError) {
+        // Log but don't fail the group creation
+        console.error('Auto-friendship failed:', friendError);
+      }
     }
 
     res.status(201).json({ group });
